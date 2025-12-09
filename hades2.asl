@@ -6,7 +6,6 @@
         cgull: House splits + splits on boss kill, revamp for Hades II.
         iDeathHD: solved the 23 length string crisis of 2024
         Sam C. (froggy) : Olympic & Warsong updates
-        Kenorah: fixed Crossroads split for Hades II.
 */
 
 state("Hades2")
@@ -37,7 +36,6 @@ init
     vars.InitComplete = false;
     vars.CancelSource = new CancellationTokenSource();
     vars.quick_restart_mod = false;
-    vars.is_opening_chamber = false;
 
     System.Threading.Tasks.Task.Run(async () =>
     {
@@ -183,11 +181,6 @@ update
             vars.Log("(update) Detected Chronos/Typhon kill");
             vars.has_beat_final_boss = true;
         }
-
-        vars.is_opening_chamber = (
-        current.map == "F_Opening01" || current.map == "F_Opening02" || // Erebus
-        current.map == "F_Opening03" || current.map=="N_Opening01" // Erebus || Ephyrya
-    );
     }
 
     // Get the array of screen IntPtrs and iterate to find InGameUI screen
@@ -269,7 +262,11 @@ onStart
 start
 {
     // Start the timer if in the first room and the old timer is greater than the new (memory address holds the value from the previous run)
-    if (old.total_seconds > current.total_seconds && vars.is_opening_chamber)
+    var is_opening_chamber = (
+        current.map == "F_Opening01" || current.map == "F_Opening02" || // Erebus
+        current.map == "F_Opening03" || current.map=="N_Opening01" // Erebus || Ephyrya
+    );
+    if (old.total_seconds > current.total_seconds && is_opening_chamber)
     {
         return true;
     }
@@ -305,7 +302,7 @@ split
     // Split on run start if Crossroads Splits are enabled
     if (settings["multiWep"] && settings["houseSplits"])
     {
-        if (old.total_seconds > current.total_seconds && vars.is_opening_chamber)
+        if (current.map == "Hub_PreRun" && (old.total_seconds > current.total_seconds))
         {
             vars.Log(current.run_time + " (multiWep && houseSplits) Splitting for house split");
             return true;
